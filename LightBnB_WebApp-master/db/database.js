@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 require('dotenv').config();
 const properties = require("./json/properties.json");
 const users = require("./json/users.json");
@@ -79,9 +80,30 @@ const addUser = function(user) {
  * @param {string} guest_id The id of the user.
  * @return {Promise<[{}]>} A promise to the reservations.
  */
-// eslint-disable-next-line camelcase
 const getAllReservations = function(guest_id, limit = 10) {
-  return getAllProperties(null, 2);
+  const queryString = `
+    SELECT reservations.*, properties.*
+    AVG(property_reviews.rating) AS average_rating
+    FROM reservations
+    JOIN property_reviews ON reservations.id = property_reviews.reservation_id
+    JOIN properties ON properties.id = property_reviews.property_id
+    WHERE reservations.guest_id = $1
+    GROUP BY reservations.id, properties.id
+    ORDER BY reservations.start_date
+    LIMIT $2;
+    `;
+  
+  return pool
+    .query(queryString, [guest_id, limit])
+    .then((result) => {
+      console.log(result);
+      return result.rows[0];
+    })
+    .catch((err) => {
+      console.log(err.message);
+    });
+  
+  // return getAllProperties(null, 2);
 };
 
 /// Properties
