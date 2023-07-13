@@ -1,3 +1,4 @@
+require('dotenv').config();
 const properties = require("./json/properties.json");
 const users = require("./json/users.json");
 
@@ -5,15 +6,15 @@ const users = require("./json/users.json");
 const { Pool } = require('pg');
 
 const config = {
-  port: 5432,
-  host: 'localhost',
-  database: 'lightbnb',
-  user: 'katherinestruthers',
-  password: ''
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASS
 };
 
 const pool = new Pool(config);
 pool.connect();
+
 
 /// Users
 
@@ -23,14 +24,14 @@ pool.connect();
  * @return {Promise<{}>} A promise to the user.
  */
 const getUserWithEmail = function(email) {
-  let resolvedUser = null;
-  for (const userId in users) {
-    const user = users[userId];
-    if (user.email.toLowerCase() === email.toLowerCase()) {
-      resolvedUser = user;
-    }
-  }
-  return Promise.resolve(resolvedUser);
+  return pool
+    .query(`SELECT * FROM users WHERE email = $1;`, [email])
+    .then((result) => {
+      return result.rows[0];
+    })
+    .catch((err) => {
+      console.log(err.message);
+    });
 };
 
 /**
@@ -39,7 +40,14 @@ const getUserWithEmail = function(email) {
  * @return {Promise<{}>} A promise to the user.
  */
 const getUserWithId = function(id) {
-  return Promise.resolve(users[id]);
+  return pool
+    .query(`SELECT * FROM users WHERE id = $1;`, [id])
+    .then((result) => {
+      return result.rows[0];
+    })
+    .catch((err) => {
+      console.log(err.message);
+    });
 };
 
 /**
@@ -48,10 +56,20 @@ const getUserWithId = function(id) {
  * @return {Promise<{}>} A promise to the user.
  */
 const addUser = function(user) {
-  const userId = Object.keys(users).length + 1;
-  user.id = userId;
-  users[userId] = user;
-  return Promise.resolve(user);
+  const queryString = `
+    INSERT INTO users (name, email, password)
+    VALUES ($1, $2, $3)
+    RETURNING *;
+    `;
+
+  return pool
+    .query(queryString, [user.name, user.email, user.password])
+    .then((result) => {
+      return result.rows[0];
+    })
+    .catch((err) => {
+      console.log(err.message);
+    });
 };
 
 /// Reservations
