@@ -27,7 +27,7 @@ CREATE TABLE properties (
   street VARCHAR(255) NOT NULL,
   city VARCHAR(255) NOT NULL,
   province VARCHAR(255) NOT NULL,
-  post_code VARCHAR(7) NOT NULL,
+  post_code VARCHAR(255) NOT NULL,
 
   active BOOLEAN NOT NULL DEFAULT true
 );
