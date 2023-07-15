@@ -1,21 +1,16 @@
 /* eslint-disable camelcase */
 require('dotenv').config();
-const properties = require("./json/properties.json");
-const users = require("./json/users.json");
 
 /// Connection
 const { Pool } = require('pg');
 
-const config = {
+const pool = new Pool({
   host: process.env.DB_HOST,
   database: process.env.DB_NAME,
   user: process.env.DB_USER,
   password: process.env.DB_PASS
-};
-
-const pool = new Pool(config);
+});
 pool.connect();
-
 
 /// Users
 
